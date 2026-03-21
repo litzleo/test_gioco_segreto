@@ -1242,14 +1242,16 @@ velocini.rinascita = {x: 410 - LARGHEZZA/2, y: 1540 - ALTEZZA};
     collisori.push({x: 1160, y: 510, w: 800, h: 40, rompibile: false, mobile: false});
     collisori.push(creaSpine(1160, 490, 800, 20));
     collisori.push(rendiMobileBiStabile({x: 1600, y: 550, w: 140, h: 70, rompibile: false, mobile: false,
-        percorso: [{x: 2060, y: 550, t: 8}, {x: 1600, y: 550}]
+        percorso: [{x: 2060, y: 550, t: 4}, {x: 1600, y: 550}]
     }));
     collisori.push({x: 1700, y: 620, w: 400, h: 40, rompibile: false, mobile: false});
-    const bloccaAscensoreVersoRotolamento = {x: 1930, y: 760, w: 230, h: 40, rompibile: true, mobile: false};
-    collisori.push(bloccaAscensoreVersoRotolamento);
+    const bloccaAscensoreVersoRotolamento1 = {x: 1930, y: 760, w: 230, h: 40, rompibile: true, mobile: false};
+    collisori.push(bloccaAscensoreVersoRotolamento1);
+    const bloccaAscensoreVersoRotolamento2 = {x: 2020, y: 420, w: 140, h: 40, rompibile: true, mobile: false};
+    collisori.push(bloccaAscensoreVersoRotolamento2);
     collisori.push({x: 1890, y: 760, w: 40, h: 370, rompibile: false, mobile: false});
-    collisori.push(rendiMobileMonoStabile({x: 1890, y: 420, w: 270, h: 40, rompibile: false, mobile: false,
-        percorso: [{x: 1890, y: 420, t: 8}, {x: 1890, y: 1210, t: 12}, {x: 1890, y: 420}]
+    collisori.push(rendiMobileMonoStabile({x: 2020, y: 460, w: 140, h: 40, rompibile: false, mobile: false,
+        percorso: [{x: 2020, y: 460, t: 8}, {x: 2020, y: 1170, t: 12}, {x: 2020, y: 460}]
     }));
     collisori.push({x: 1700, y: 1310, w: 200, h: 40, rompibile: false, mobile: false});
     collisori.push({x: 1900, y: 1210, w: 40, h: 140, rompibile: false, mobile: false});
@@ -1260,9 +1262,13 @@ velocini.rinascita = {x: 410 - LARGHEZZA/2, y: 1540 - ALTEZZA};
     collisori.push({x: 1810, y: 1000, w: 80, h: 40, rompibile: false, mobile: false});
     collisori.push({x: 1700, y: 1140, w: 80, h: 40, rompibile: false, mobile: false});
     creaPulsante(1700, 1290, 100, 21, () => {
-        if(collisori.includes(bloccaAscensoreVersoRotolamento)){
-            collisori.splice(collisori.indexOf(bloccaAscensoreVersoRotolamento), 1);
-            togliCollisoreAQuadranti(bloccaAscensoreVersoRotolamento);
+        if(collisori.includes(bloccaAscensoreVersoRotolamento1)){
+            collisori.splice(collisori.indexOf(bloccaAscensoreVersoRotolamento1), 1);
+            togliCollisoreAQuadranti(bloccaAscensoreVersoRotolamento1);
+        }
+        if(collisori.includes(bloccaAscensoreVersoRotolamento2)){
+            collisori.splice(collisori.indexOf(bloccaAscensoreVersoRotolamento2), 1);
+            togliCollisoreAQuadranti(bloccaAscensoreVersoRotolamento2);
         }
     });
     collisori.push({x: 2100, y: 380, w: 60, h: 40, rompibile: false, mobile: false});
