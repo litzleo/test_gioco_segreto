@@ -171,7 +171,7 @@ function disegnaPersonaggio(x, y, w, h) {
 
     let spriteW = 24; 
     let spriteH = 48;
-    const velRatio = MAX_VELOCITA / abs(velocini.vx);
+    const velRatio = MAX_VELOCITA / abs(velocini.pavimentoVx - velocini.vx);
     if((velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco")) &&  tempo % (4*floor(velRatio)) === 0)contPersonaggio++;
     let sourceX = (contPersonaggio % 4 + (velocini.stato.has("abbassato") ? 5 : 0)) * spriteW; 
     if(velocini.stato.has("PW_saltomuro")){
