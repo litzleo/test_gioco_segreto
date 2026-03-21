@@ -399,7 +399,7 @@ function muoviVelocini(deltaTime) {
                     let acc = modAria * velocini.accel * deltaTime
                     velocini.vx = max(velocini.vx - acc, -MAX_VELOCITA);
                     if(velocini.vx > 0)
-                        velocini.vx = max(velocini.vx - MODIFICATORE_CAMBIO_DIREZIONE * acc, -MAX_VELOCITA);
+                        velocini.vx = max(velocini.vx - (velocini.stato.has("atterrato") ? MODIFICATORE_CAMBIO_DIREZIONE : MODIFICATORE_CAMBIO_DIREZIONE_IN_ARIA) * acc, -MAX_VELOCITA);
                     movLaterale = true;
                     velocini.orientazione = "sinistra";
                 }
@@ -407,7 +407,7 @@ function muoviVelocini(deltaTime) {
                     let acc = modAria * velocini.accel * deltaTime
                     velocini.vx = min(velocini.vx + acc, MAX_VELOCITA);
                     if(velocini.vx < 0)
-                        velocini.vx = min(velocini.vx + MODIFICATORE_CAMBIO_DIREZIONE * acc, MAX_VELOCITA);
+                        velocini.vx = min(velocini.vx + (velocini.stato.has("atterrato") ? MODIFICATORE_CAMBIO_DIREZIONE : MODIFICATORE_CAMBIO_DIREZIONE_IN_ARIA) * acc, MAX_VELOCITA);
                     movLaterale = true;
                     velocini.orientazione = "destra";
                 }

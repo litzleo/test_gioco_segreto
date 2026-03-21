@@ -1242,8 +1242,8 @@ velocini.rinascita = {x: 410 - LARGHEZZA/2, y: 1540 - ALTEZZA};
     collisori.push({x: 1160, y: 510, w: 800, h: 40, rompibile: false, mobile: false});
     collisori.push(creaSpine(1160, 490, 800, 20));
     collisori.push(rendiMobileBiStabile({x: 1600, y: 550, w: 140, h: 70, rompibile: false, mobile: false,
-        percorso: [{x: 2060, y: 550, t: 5}, {x: 1600, y: 550}]
-    }, 4, 15.5));
+        percorso: [{x: 2060, y: 550, t: 8}, {x: 1600, y: 550}]
+    }));
     collisori.push({x: 1700, y: 620, w: 400, h: 40, rompibile: false, mobile: false});
     const bloccaAscensoreVersoRotolamento = {x: 1930, y: 760, w: 230, h: 40, rompibile: true, mobile: false};
     collisori.push(bloccaAscensoreVersoRotolamento);
