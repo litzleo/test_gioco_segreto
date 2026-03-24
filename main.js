@@ -852,9 +852,14 @@ function disegnaCollisori(){
 
     const collisoriCalcolati = new Set();
     const collisoriPrimopiano = new Set();
-    for(let x = camera.x - width/2 - LARGHEZZA*2; x <= camera.x + width/2 + LARGHEZZA*2; x += LARGHEZZA/2){
-        for(let y = camera.y + velocini.h/2 - height/2 - ALTEZZA*2; y <= camera.y + velocini.h/2 + height/2 + ALTEZZA*2; y += ALTEZZA/2){
-            let index = getCollIndice({x: x, y: y});
+    const minIndiceX = floor((camera.x - width/2) / LARGHEZZA) + CONFINI_MAPPA.x;
+    const maxIndiceX = floor((camera.x + width/2) / LARGHEZZA) + CONFINI_MAPPA.x;
+    const minIndiceY = floor((camera.y - height/2) / ALTEZZA) + CONFINI_MAPPA.y;
+    const maxIndiceY = floor((camera.y + height/2) / ALTEZZA) + CONFINI_MAPPA.y;
+
+    for (let x = minIndiceX; x <= maxIndiceX; x++) {
+        for (let y = minIndiceY; y <= maxIndiceY; y++) {
+            let index = x + "_" + y;
             if(index in quadranti){
                 for (let i = quadranti[index].length-1; i >= 0; i--) {
                     let collisore = quadranti[index][i];
