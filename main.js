@@ -54,6 +54,8 @@ function setup() {
     textBuffer.fill(0);
     transizionaSchermata('menù');
 
+    textureMode(NORMAL);
+
 }
 
 function vittoria(){
@@ -208,8 +210,8 @@ function disegnaPersonaggio(x, y, w, h) {
 
     rect(-w/2, -h/2, w, h);
 
-    resetShader();
     pop();
+    resetShader();
 
     // Aggiornamento animazione (spostato fuori per pulizia)
     if ((velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco")) && tempo % (4 * floor(velRatio)) === 0) {
@@ -796,6 +798,7 @@ function disegnaTexture(collisore){
         atlasShader.setUniform('uRepeat', [ripetizioneX, ripetizioneY]);
 
         rect(collisore.x, collisore.y, collisore.w, dh);
+        resetShader();
 
         if(collisore.h > TERRENO_H){
             const repDeepX = collisore.w / PROFONDO_W;
@@ -826,40 +829,86 @@ function disegnaTexture(collisore){
             });
         endShape();
 
+        resetShader();
+
+        atlasShader.setUniform('uTexture', atlasImage);
+        atlasShader.setUniform('uColor', [1, 1, 1, 1]);
+        atlasShader.setUniform('uIsSprite', 0.0); 
+        atlasShader.setUniform('uSubRect', uvTerreno);
+        atlasShader.setUniform('uRepeat', [1.0, 1.0]);
+        atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
+        atlasShader.setUniform('uWrapMode', [1.0, 0.0]); 
+        noStroke();           // Impedisce al bug delle linee di rompere il batch
+        
+        texture(atlasImage);
+        shader(atlasShader);
+        // 1. INIZIAMO IL MEGA-BATCH UNA VOLTA SOLA
+        beginShape(QUADS); 
 
         collisore.vertici.forEach((vertice, indice) => {
-            
-            atlasShader.setUniform('uTexture', atlasImage);
-            atlasShader.setUniform('uColor', [1, 1, 1, 1]);
-            atlasShader.setUniform('uIsSprite', 0.0); 
-            atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]);
-            atlasShader.setUniform('uSubRect', uvTerreno);
-            atlasShader.setUniform('uRepeat', [1.0, 1.0]);
-            atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
-            atlasShader.setUniform('uWrapMode', [1.0, 0.0]); 
             const prossimo = collisore.vertici[(indice + 1) % collisore.vertici.length];
-            if(vertice.x > prossimo.x){
+            
+            if (vertice.x > prossimo.x) {
                 const oltre = collisore.vertici[(indice + 2) % collisore.vertici.length];
                 const precedente = collisore.vertici[(indice + collisore.vertici.length - 1) % collisore.vertici.length];
                 const angolo = atan2(vertice.y - prossimo.y, vertice.x - prossimo.x);
                 const dist = sqrt(sq(vertice.y - prossimo.y) + sq(vertice.x - prossimo.x));
+                
                 let verticeOltre = rimappaVertice(prossimo.x, prossimo.y, oltre.x, oltre.y, -angolo);
                 verticeOltre.x *= TERRENO_H / verticeOltre.y;
                 let verticePrecedente = rimappaVertice(prossimo.x, prossimo.y, precedente.x, precedente.y, -angolo);
                 verticePrecedente.x = (verticePrecedente.x - dist) * TERRENO_H / verticePrecedente.y + dist;
-                push();
-                    translate(prossimo.x + collisore.x, prossimo.y + collisore.y);
-                    rotate(angolo);
-                    beginShape();
-                        vertex(0, 0, 0, 0);
-                        vertex( max(0, verticeOltre.x), TERRENO_H, max(0, verticeOltre.x) / TERRENO_W, 1);
-                        vertex( min(dist, verticePrecedente.x), TERRENO_H, min(dist, verticePrecedente.x) / TERRENO_W, 1);
-                        vertex(dist, 0, dist / TERRENO_W, 0);
-                    endShape();
-                pop();
 
+                // --- INIZIO MATEMATICA MANUALE (Bypass di translate e rotate) ---
+                
+                // Valori di traslazione globale (il centro del nostro sistema locale)
+                const tx = prossimo.x + collisore.x;
+                const ty = prossimo.y + collisore.y;
+                
+                // Pre-calcoliamo seno e coseno per la rotazione
+                const cosA = cos(angolo);
+                const sinA = sin(angolo);
+
+                // Funzione interna per ruotare e traslare un punto locale nel mondo globale
+                const applicaTrasformazione = (localX, localY) => {
+                    return {
+                        x: (localX * cosA) - (localY * sinA) + tx,
+                        y: (localX * sinA) + (localY * cosA) + ty
+                    };
+                };
+
+                // Definiamo i 4 vertici LOCALI (quelli che prima mettevi in vertex)
+                const lx0 = 0;
+                const ly0 = 0;
+                
+                const lx1 = max(0, verticeOltre.x);
+                const ly1 = TERRENO_H;
+                
+                const lx2 = min(dist, verticePrecedente.x);
+                const ly2 = TERRENO_H;
+                
+                const lx3 = dist;
+                const ly3 = 0;
+
+                // Trasformiamoli in vertici GLOBALI usando la nostra formula
+                const p0 = applicaTrasformazione(lx0, ly0);
+                const p1 = applicaTrasformazione(lx1, ly1);
+                const p2 = applicaTrasformazione(lx2, ly2);
+                const p3 = applicaTrasformazione(lx3, ly3);
+
+                // --- FINE MATEMATICA MANUALE ---
+
+                // Ora mandiamo i punti calcolati direttamente alla scheda video!
+                // Le UV (gli ultimi due parametri) rimangono identiche perché dipendono dalla distanza locale
+                vertex(p0.x, p0.y, 0, 0);
+                vertex(p1.x, p1.y, max(0, verticeOltre.x) / TERRENO_W, 1);
+                vertex(p2.x, p2.y, min(dist, verticePrecedente.x) / TERRENO_W, 1);
+                vertex(p3.x, p3.y, dist / TERRENO_W, 0);
             } 
-        })
+        });
+
+        // 2. FINE DEL MEGA-BATCH (Disegna tutto l'erba del poligono in un millisecondo)
+        endShape();
     }
     resetShader();
 }
