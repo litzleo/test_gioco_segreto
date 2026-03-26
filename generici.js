@@ -310,8 +310,6 @@ function creaSpine(x, y, w, h, o = 'su'){
             translate(x + spine.x + w/2, y + spine.y + h/2);
             let textureW = w;
             let textureH = h;
-            let wrapX = 1.0;
-            let wrapY = 0.0;
             switch(o){
                 case 'giù':
                     rotate(PI);
@@ -320,15 +318,11 @@ function creaSpine(x, y, w, h, o = 'su'){
                     rotate(-HALF_PI);
                     textureW = h;
                     textureH = w;
-                    wrapX = 0.0;
-                    wrapY = 1.0;
                 break;
                 case 'dx':
                     rotate(HALF_PI);
                     textureW = h;
                     textureH = w;
-                    wrapX = 0.0;
-                    wrapY = 1.0;
                 break;
             }
             numSpine = floor(textureW / textureH);
@@ -339,7 +333,7 @@ function creaSpine(x, y, w, h, o = 'su'){
             atlasShader.setUniform('uSubRect', uvSpina);
             atlasShader.setUniform('uRepeat', [numSpine, 1]);
             atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
-            atlasShader.setUniform('uWrapMode', [wrapX, wrapY]); 
+            atlasShader.setUniform('uWrapMode', [1.0, 0.0]); 
             rect(- textureW/2, - textureH/2, numSpine*textureH, textureH);
         pop();
         resetShader();
