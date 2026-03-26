@@ -6,10 +6,7 @@ let trackerFill = undefined;
 let trackerStroke = undefined;
 
 let spriteSheet;
-let terreno;
-let terrenoProfondo;
-let textureSpina;
-let textureCheckpoint;
+let atlasImage;
 
 const originalFill = p5.prototype.fill;
 p5.prototype.fill = function(...args) {
@@ -37,11 +34,11 @@ p5.prototype.noStroke = function() {
 
 function preload() {
   mioFont = loadFont('font/arial.ttf'); 
-  spriteSheet = loadImage('sprite/velocini.png');
-  terreno = loadImage('sprite/terreno.png');
-  terrenoProfondo = loadImage('sprite/terreno_profondo.png');
-  textureSpina = loadImage('sprite/spina.png');
-  textureCheckpoint = loadImage('sprite/checkpoint.png');
+  atlasImage = loadImage('sprite/sprite_sheet.png', img => {
+        // Imposta i filtri della texture WebGL direttamente
+        img.canvas.getContext('2d').imageSmoothingEnabled = false;
+    });
+  atlasShader = loadShader('atlas.vert', 'atlas.frag');
 }
 function setup() {
     const W = 1350, H = 585;
@@ -56,6 +53,7 @@ function setup() {
     textBuffer.textFont(mioFont);
     textBuffer.fill(0);
     transizionaSchermata('menù');
+
 }
 
 function vittoria(){
@@ -127,9 +125,6 @@ function disegnaGioco(){
     for (let i = 0; i < causatori.length; i++) {
         if(causatori[i].disegno){
             causatori[i].disegno();
-        } else {
-            /*fill(0, 255, 0, 128);
-            rect(causatori[i].x, causatori[i].y, causatori[i].w, causatori[i].h);*/
         }
     }
 
@@ -160,38 +155,66 @@ function disegnaGioco(){
 let contPersonaggio=0;
 function disegnaPersonaggio(x, y, w, h) {
     push();
+    shader(atlasShader);
+    
+    // 1. Calcolo dell'indice della colonna (frame dello sprite)
+    let col = (contPersonaggio % 4 + (velocini.stato.has("abbassato") ? 5 : 0));
+    if (velocini.stato.has("PW_saltomuro")) {
+        if (velocini.stato.has("pareteDX") || velocini.stato.has("pareteSX")) {
+            col = (velocini.stato.has("abbassato") ? 9 : 4);
+        }
+    }
 
+    const ATLAS_W = atlasImage.width;
+    const ATLAS_H = atlasImage.height;
+
+    const PERS_W = 24;
+    const PERS_H = 48;
+
+    // 2. Setup delle uniform per lo shader
+    // Assumendo Atlas 240x132 e sprite 24x48
+    let sw = PERS_W / ATLAS_W; 
+    let sh = PERS_H / ATLAS_H; 
+    let sx = (col * PERS_W) / ATLAS_W; 
+    const personaggioRect = [sx, 0.0, sw, sh];
+    
+    atlasShader.setUniform('uTexture', atlasImage);
+    atlasShader.setUniform('uSubRect', personaggioRect);
+    atlasShader.setUniform('uRepeat', [1, 1]);
+    atlasShader.setUniform('uIsSprite', 1); 
+    atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
+    atlasShader.setUniform('uWrapMode', [0.0, 0.0]); 
+
+    // Gestione colore (Tint) via shader
+    if (velocini.stato.has("scatto")) {
+        atlasShader.setUniform('uColor', [0, 1, 0, 1]);
+    } else {
+        atlasShader.setUniform('uColor', [0, 0, 0, 1]); 
+    }
+
+    // 3. Posizionamento e Geometria
     translate(x + w/2, y + h/2); 
     
+    // Orientazione
     if (velocini.orientazione === "sinistra" || (velocini.stato.has("PW_saltomuro") && velocini.stato.has("pareteSX"))) {
         scale(-1, 1);
     }
     
-    imageMode(CENTER);
-
-    let spriteW = 24; 
-    let spriteH = 48;
+    // Inclinazione dinamica basata sulla velocità
     const velRatio = MAX_VELOCITA / abs(velocini.pavimentoVx - velocini.vx);
-    if((velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco")) &&  tempo % (4*floor(velRatio)) === 0)contPersonaggio++;
-    let sourceX = (contPersonaggio % 4 + (velocini.stato.has("abbassato") ? 5 : 0)) * spriteW; 
-    if(velocini.stato.has("PW_saltomuro")){
-        if(velocini.stato.has("pareteDX") || velocini.stato.has("pareteSX"))
-            sourceX = (velocini.stato.has("abbassato") ? 9 : 4) * spriteW;
+    if ((velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco")) && velRatio < 1.5) {
+        shearX(-QUARTER_PI / 6 / velRatio);
     }
-    let sourceY = 0; 
-    if((velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco")) && velRatio < 1.5)
-        shearX(-QUARTER_PI/6/velRatio);
 
-    if(velocini.stato.has("scatto")){
-        tint(0, 255, 0);
-    } else {
-        tint(0);
-    }
-    image(spriteSheet, 0, 0, w, h, sourceX, sourceY, spriteW, spriteH);
-    
-    noTint();
+    rect(-w/2, -h/2, w, h);
 
+    resetShader();
     pop();
+
+    // Aggiornamento animazione (spostato fuori per pulizia)
+    if ((velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco")) && tempo % (4 * floor(velRatio)) === 0) {
+        contPersonaggio++;
+    }
 }
 
 let menuIndex = 0;
@@ -733,42 +756,87 @@ function mouseClicked() {
 }
 
 function disegnaTexture(collisore){
-    textureWrap(REPEAT, CLAMP);
-    if('disegno' in collisore)
+    
+    if('disegno' in collisore){
         collisore.disegno();
-    else if('h' in collisore){
-        const dh = min(collisore.h, terreno.height);
-        texture(terreno);
-        const ripetizioneX = collisore.w / terreno.width;
-        beginShape();
-            vertex(collisore.x, collisore.y, 0, 0);
-            vertex(collisore.x, collisore.y + dh, 0, 1);
-            vertex(collisore.x + collisore.w, collisore.y + dh, ripetizioneX, 1);
-            vertex(collisore.x + collisore.w, collisore.y, ripetizioneX, 0);
-        endShape();
-        textureWrap(REPEAT);
-        if(collisore.h > terreno.height){
-            texture(terrenoProfondo);
-            const ripetizioneY = (collisore.h - dh) / terrenoProfondo.height;
-            beginShape();
-                vertex(collisore.x, collisore.y + dh, 0, 0);
-                vertex(collisore.x, collisore.y + collisore.h, 0, ripetizioneY);
-                vertex(collisore.x + collisore.w, collisore.y + collisore.h, ripetizioneX, ripetizioneY);
-                vertex(collisore.x + collisore.w, collisore.y + dh, ripetizioneX, 0);
-            endShape();
+        return;
+    }
+    const ATLAS_W = atlasImage.width;
+    const ATLAS_H = atlasImage.height;
+    // TERRENO (Erba sopra) - Misura dove si trova nello spritesheet
+    const TERRENO_X = 0;   // Inizio X dell'erba
+    const TERRENO_Y = 100;   // Inizio Y dell'erba
+    const TERRENO_W = 16;  // Larghezza dell'erba
+    const TERRENO_H = 16;  // Altezza dell'erba (ex terreno.height)
+
+    // TERRENO PROFONDO (Terra sotto)
+    const PROFONDO_X = 0;  
+    const PROFONDO_Y = 116; 
+    const PROFONDO_W = 16; 
+    const PROFONDO_H = 16; 
+
+    // Calcolo preventivo dei rettangoli UV (0.0 -> 1.0)
+    const uvTerreno = [TERRENO_X / ATLAS_W, TERRENO_Y / ATLAS_H, TERRENO_W / ATLAS_W, TERRENO_H / ATLAS_H];
+    const uvProfondo = [PROFONDO_X / ATLAS_W, PROFONDO_Y / ATLAS_H, PROFONDO_W / ATLAS_W, PROFONDO_H / ATLAS_H];
+
+    if('h' in collisore){
+
+        shader(atlasShader);
+        atlasShader.setUniform('uTexture', atlasImage);
+        atlasShader.setUniform('uColor', [1, 1, 1, 1]);
+        atlasShader.setUniform('uIsSprite', 0.0); 
+        atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
+        atlasShader.setUniform('uWrapMode', [1.0, 0.0]); 
+        const dh = min(collisore.h, TERRENO_H);
+        
+        const ripetizioneX = collisore.w / TERRENO_W;
+        const ripetizioneY = dh / TERRENO_H; 
+        
+        atlasShader.setUniform('uSubRect', uvTerreno);
+        atlasShader.setUniform('uRepeat', [ripetizioneX, ripetizioneY]);
+
+        rect(collisore.x, collisore.y, collisore.w, dh);
+
+        if(collisore.h > TERRENO_H){
+            const repDeepX = collisore.w / PROFONDO_W;
+            const repDeepY = (collisore.h - dh) / PROFONDO_H;
+            shader(atlasShader);
+            atlasShader.setUniform('uTexture', atlasImage);
+            atlasShader.setUniform('uColor', [1, 1, 1, 1]);
+            atlasShader.setUniform('uIsSprite', 0.0); 
+            atlasShader.setUniform('uSubRect', uvProfondo);
+            atlasShader.setUniform('uRepeat', [repDeepX, repDeepY]);
+            atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
+            atlasShader.setUniform('uWrapMode', [1.0, 1.0]); 
+            rect(collisore.x, collisore.y + dh, collisore.w, collisore.h - dh);
         }
     } else {
-        textureWrap(REPEAT);
-        texture(terrenoProfondo);
+        shader(atlasShader);
+        atlasShader.setUniform('uTexture', atlasImage);
+        atlasShader.setUniform('uColor', [1, 1, 1, 1]);
+        atlasShader.setUniform('uIsSprite', 0.0); 
+        atlasShader.setUniform('uSubRect', uvProfondo);
+        atlasShader.setUniform('uRepeat', [1.0, 1.0]);
+        atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]);  
+        atlasShader.setUniform('uWrapMode', [1.0, 1.0]); 
         beginShape();
             collisore.vertici.forEach(vertice => {
                 vertex(vertice.x + collisore.x, vertice.y + collisore.y,
-                    (vertice.x + collisore.x) / terrenoProfondo.width, (vertice.y + collisore.y) / terrenoProfondo.height);
+                    (vertice.x + collisore.x) / PROFONDO_W, (vertice.y + collisore.y) / PROFONDO_H);
             });
         endShape();
-        textureWrap(REPEAT, CLAMP);
-        texture(terreno);
+
+
         collisore.vertici.forEach((vertice, indice) => {
+            
+            atlasShader.setUniform('uTexture', atlasImage);
+            atlasShader.setUniform('uColor', [1, 1, 1, 1]);
+            atlasShader.setUniform('uIsSprite', 0.0); 
+            atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]);
+            atlasShader.setUniform('uSubRect', uvTerreno);
+            atlasShader.setUniform('uRepeat', [1.0, 1.0]);
+            atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
+            atlasShader.setUniform('uWrapMode', [1.0, 0.0]); 
             const prossimo = collisore.vertici[(indice + 1) % collisore.vertici.length];
             if(vertice.x > prossimo.x){
                 const oltre = collisore.vertici[(indice + 2) % collisore.vertici.length];
@@ -776,24 +844,24 @@ function disegnaTexture(collisore){
                 const angolo = atan2(vertice.y - prossimo.y, vertice.x - prossimo.x);
                 const dist = sqrt(sq(vertice.y - prossimo.y) + sq(vertice.x - prossimo.x));
                 let verticeOltre = rimappaVertice(prossimo.x, prossimo.y, oltre.x, oltre.y, -angolo);
-                verticeOltre.x *= terreno.height / verticeOltre.y;
+                verticeOltre.x *= TERRENO_H / verticeOltre.y;
                 let verticePrecedente = rimappaVertice(prossimo.x, prossimo.y, precedente.x, precedente.y, -angolo);
-                verticePrecedente.x = (verticePrecedente.x - dist) * terreno.height / verticePrecedente.y + dist;
+                verticePrecedente.x = (verticePrecedente.x - dist) * TERRENO_H / verticePrecedente.y + dist;
                 push();
                     translate(prossimo.x + collisore.x, prossimo.y + collisore.y);
                     rotate(angolo);
                     beginShape();
                         vertex(0, 0, 0, 0);
-                        vertex( max(0, verticeOltre.x), terreno.height, max(0, verticeOltre.x) / terreno.width, 1);
-                        vertex( min(dist, verticePrecedente.x), terreno.height, min(dist, verticePrecedente.x) / terreno.width, 1);
-                        vertex(dist, 0, dist / terreno.width, 0);
+                        vertex( max(0, verticeOltre.x), TERRENO_H, max(0, verticeOltre.x) / TERRENO_W, 1);
+                        vertex( min(dist, verticePrecedente.x), TERRENO_H, min(dist, verticePrecedente.x) / TERRENO_W, 1);
+                        vertex(dist, 0, dist / TERRENO_W, 0);
                     endShape();
                 pop();
 
             } 
         })
     }
-    textureWrap(CLAMP);
+    resetShader();
 }
 
 function rimappaVertice(ox, oy, vx, vy, angolo){
@@ -843,8 +911,8 @@ function disegnaCollisori(){
         else {
             beginShape();
             collisore.vertici.forEach(vertice => {
-                vertex(vertice.x + collisore.x, vertice.y + collisore.y,
-                    (vertice.x + collisore.x) / terrenoProfondo.width, (vertice.y + collisore.y) / terrenoProfondo.height);
+                vertex(vertice.x + collisore.x, vertice.y + collisore.y);
+                    //(vertice.x + collisore.x) / terrenoProfondo.width, (vertice.y + collisore.y) / terrenoProfondo.height);
             })
             endShape();
         }
@@ -877,18 +945,4 @@ function disegnaCollisori(){
     }
     collisoriPrimopiano.forEach(collisore => disegna(collisore));
     clicked = false;
-    
-        /*for (let i = 0; i < collisori.length; i++) {
-        if(collisori[i].rompibile)fill(255, 200, 120);
-        else fill(0);
-        if('h' in collisori[i])
-            rect(collisori[i].x, collisori[i].y, collisori[i].w, collisori[i].h);
-        else{
-            beginShape();
-                for(let j=0; j<collisori[i].vertici.length; j++){
-                    vertex(collisori[i].vertici[j].x + collisori[i].x, collisori[i].vertici[j].y + collisori[i].y);
-                }
-            endShape(CLOSE);
-        }
-    }*/
 }

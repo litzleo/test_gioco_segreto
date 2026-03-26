@@ -295,13 +295,23 @@ function creaSpine(x, y, w, h, o = 'su'){
         spine.vertici.push({ x: o==='sx' ? x+w : x, y: y});
         if(o==='dx')spine.vertici.reverse();
     }
+    
+    const ATLAS_W = atlasImage.width;
+    const ATLAS_H = atlasImage.height;
+    
+    const SPINA_X = 0;   
+    const SPINA_Y = 80;   
+    const SPINA_W = 20;  
+    const SPINA_H = 20; 
+    const uvSpina = [SPINA_X / ATLAS_W, SPINA_Y / ATLAS_H, SPINA_W / ATLAS_W, SPINA_H / ATLAS_H];
 
     spine.disegno = () => {
-        textureWrap(REPEAT, CLAMP);
         push();
             translate(x + spine.x + w/2, y + spine.y + h/2);
             let textureW = w;
             let textureH = h;
+            let wrapX = 1.0;
+            let wrapY = 0.0;
             switch(o){
                 case 'giù':
                     rotate(PI);
@@ -310,23 +320,29 @@ function creaSpine(x, y, w, h, o = 'su'){
                     rotate(-HALF_PI);
                     textureW = h;
                     textureH = w;
+                    wrapX = 0.0;
+                    wrapY = 1.0;
                 break;
                 case 'dx':
                     rotate(HALF_PI);
                     textureW = h;
                     textureH = w;
+                    wrapX = 0.0;
+                    wrapY = 1.0;
                 break;
             }
             numSpine = floor(textureW / textureH);
-            texture(textureSpina);
-            beginShape();
-                vertex(- textureW/2, - textureH/2, 0, 0.1);
-                vertex(- textureW/2, textureH - textureH/2, 0, 1);
-                vertex(numSpine*textureH - textureW/2, textureH - textureH/2, numSpine, 1);
-                vertex(numSpine*textureH - textureW/2, - textureH/2, numSpine, 0.1);
-            endShape();
+            shader(atlasShader);
+            atlasShader.setUniform('uTexture', atlasImage);
+            atlasShader.setUniform('uColor', [1, 1, 1, 1]);
+            atlasShader.setUniform('uIsSprite', 0.0); 
+            atlasShader.setUniform('uSubRect', uvSpina);
+            atlasShader.setUniform('uRepeat', [numSpine, 1]);
+            atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
+            atlasShader.setUniform('uWrapMode', [wrapX, wrapY]); 
+            rect(- textureW/2, - textureH/2, numSpine*textureH, textureH);
         pop();
-        textureWrap(CLAMP);
+        resetShader();
     }
 
     return spine;
@@ -354,9 +370,9 @@ function percorsoCircolare(x, y, r, t, phi, orario){
 let ultimoCheckPointToccato = false;
 function provaGenerica1(){
     
-velocini.rinascita = {x: 410 - LARGHEZZA/2, y: 1540 - ALTEZZA};
-
+    velocini.rinascita = {x: 410 - LARGHEZZA/2, y: 1540 - ALTEZZA};
     causatori.push(creaCheckpoint({x: 360, y: 1440, w: 100, h: 100}, 410 - LARGHEZZA/2, 1540 - ALTEZZA));
+
     causatori.push({x: -100, y: 3100, w: 5300, h: 100, effetto: () => {morte();}});
     causatori.push({x: 100, y: 2860, w: 100, h: 100, effetto: () => {velocini.stato.add("PW_saltomuro");},
         disegno: () => {
@@ -1312,15 +1328,46 @@ function creaCheckpoint(causatore, x, y, f){
         if(f)f();
     }
 
+    const ATLAS_W = atlasImage.width;
+    const ATLAS_H = atlasImage.height;
+
+    const CHECKPOINT_W = 32;
+    const CHECKPOINT_H = 32;
+
     causatore.disegno = () => {
+        
+        // Calcolo dell'offset (0 = spento, 1-2 = animazione attivo)
         const offset = checkpointAttivo === causatore ? (floor(tempo / 8) % 2 + 1) : 0;
-        texture(textureCheckpoint);
-        beginShape();
-            vertex(x + (LARGHEZZA - textureCheckpoint.width / 3) / 2, y + ALTEZZA - textureCheckpoint.height, offset/3, 0);
-            vertex(x + (LARGHEZZA - textureCheckpoint.width / 3) / 2, y + ALTEZZA, offset/3, 1);
-            vertex(x + (LARGHEZZA + textureCheckpoint.width / 3) / 2, y + ALTEZZA, (1 + offset)/3 - 0.01, 1);
-            vertex(x + (LARGHEZZA + textureCheckpoint.width / 3) / 2, y + ALTEZZA - textureCheckpoint.height, (1 + offset)/3 - 0.01, 0);
-        endShape();
+        
+        shader(atlasShader);
+        texture(atlasImage);
+        // Parametri Atlas (Assumendo larghezza 240px e altezza 132px)
+        // Se i checkpoint sono sotto il personaggio (H=48), partono da Y=48
+        const sw = CHECKPOINT_W / ATLAS_W; 
+        const sh = CHECKPOINT_H / ATLAS_H; 
+        const sx = (offset * CHECKPOINT_W) / ATLAS_W; 
+        const sy = 48 / ATLAS_H; // Inizia dopo l'altezza del personaggio
+
+        const checkpointRect = [sx, sy, sw, sh];
+        
+        atlasShader.setUniform('uTexture', atlasImage);
+        atlasShader.setUniform('uSubRect', checkpointRect);
+        atlasShader.setUniform('uRepeat', [1, 1]);
+        atlasShader.setUniform('uColor', [1, 1, 1, 1]); 
+        atlasShader.setUniform('uIsSprite', 1); 
+        atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
+        atlasShader.setUniform('uWrapMode', [0.0, 0.0]); 
+    
+        const posX = x + (LARGHEZZA - CHECKPOINT_W) / 2;
+        const posY = y + ALTEZZA - CHECKPOINT_H;
+
+        push();
+        noStroke(); 
+        translate(posX, posY);
+        rect(0, 0, CHECKPOINT_W, CHECKPOINT_H); 
+        pop();
+
+        resetShader();
     }
 
     return causatore;
