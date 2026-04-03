@@ -8,6 +8,8 @@ let trackerStroke = undefined;
 let spriteSheet;
 let atlasImage;
 
+let atlasShaders = [];
+
 const originalFill = p5.prototype.fill;
 p5.prototype.fill = function(...args) {
     trackerFill = args; // Salviamo i valori
@@ -38,7 +40,8 @@ function preload() {
         // Imposta i filtri della texture WebGL direttamente
         img.canvas.getContext('2d').imageSmoothingEnabled = false;
     });
-  atlasShader = loadShader('atlas.vert', 'atlas.frag');
+  atlasShaders.push([loadShader('atlas.vert', 'clamp_clamp.frag'), loadShader('atlas.vert', 'clamp_wrap.frag')]);
+  atlasShaders.push([loadShader('atlas.vert', 'wrap_clamp.frag'), loadShader('atlas.vert', 'wrap_wrap.frag')]);
 }
 function setup() {
     const W = 1350, H = 585;
@@ -157,6 +160,7 @@ function disegnaGioco(){
 let contPersonaggio=0;
 function disegnaPersonaggio(x, y, w, h) {
     push();
+    const atlasShader = atlasShaders[0][0];
     shader(atlasShader);
     
     // 1. Calcolo dell'indice della colonna (frame dello sprite)
@@ -185,7 +189,6 @@ function disegnaPersonaggio(x, y, w, h) {
     atlasShader.setUniform('uRepeat', [1, 1]);
     atlasShader.setUniform('uIsSprite', 1); 
     atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
-    atlasShader.setUniform('uWrapMode', [0.0, 0.0]); 
 
     // Gestione colore (Tint) via shader
     if (velocini.stato.has("scatto")) {
@@ -782,13 +785,12 @@ function disegnaTexture(collisore){
     const uvProfondo = [PROFONDO_X / ATLAS_W, PROFONDO_Y / ATLAS_H, PROFONDO_W / ATLAS_W, PROFONDO_H / ATLAS_H];
 
     if('h' in collisore){
-
+        const atlasShader = atlasShaders[1][0];
         shader(atlasShader);
         atlasShader.setUniform('uTexture', atlasImage);
         atlasShader.setUniform('uColor', [1, 1, 1, 1]);
         atlasShader.setUniform('uIsSprite', 0.0); 
-        atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
-        atlasShader.setUniform('uWrapMode', [1.0, 0.0]); 
+        atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]);  
         const dh = min(collisore.h, TERRENO_H);
         
         const ripetizioneX = collisore.w / TERRENO_W;
@@ -803,6 +805,7 @@ function disegnaTexture(collisore){
         if(collisore.h > TERRENO_H){
             const repDeepX = collisore.w / PROFONDO_W;
             const repDeepY = (collisore.h - dh) / PROFONDO_H;
+            const atlasShader = atlasShaders[1][1];
             shader(atlasShader);
             atlasShader.setUniform('uTexture', atlasImage);
             atlasShader.setUniform('uColor', [1, 1, 1, 1]);
@@ -810,18 +813,17 @@ function disegnaTexture(collisore){
             atlasShader.setUniform('uSubRect', uvProfondo);
             atlasShader.setUniform('uRepeat', [repDeepX, repDeepY]);
             atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
-            atlasShader.setUniform('uWrapMode', [1.0, 1.0]); 
             rect(collisore.x, collisore.y + dh, collisore.w, collisore.h - dh);
         }
     } else {
+        let atlasShader = atlasShaders[1][1];
         shader(atlasShader);
         atlasShader.setUniform('uTexture', atlasImage);
         atlasShader.setUniform('uColor', [1, 1, 1, 1]);
         atlasShader.setUniform('uIsSprite', 0.0); 
         atlasShader.setUniform('uSubRect', uvProfondo);
         atlasShader.setUniform('uRepeat', [1.0, 1.0]);
-        atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]);  
-        atlasShader.setUniform('uWrapMode', [1.0, 1.0]); 
+        atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
         beginShape();
             collisore.vertici.forEach(vertice => {
                 vertex(vertice.x + collisore.x, vertice.y + collisore.y,
@@ -830,14 +832,14 @@ function disegnaTexture(collisore){
         endShape();
 
         resetShader();
-
+        atlasShader = atlasShaders[1][0];
+        shader(atlasShader);
         atlasShader.setUniform('uTexture', atlasImage);
         atlasShader.setUniform('uColor', [1, 1, 1, 1]);
         atlasShader.setUniform('uIsSprite', 0.0); 
         atlasShader.setUniform('uSubRect', uvTerreno);
         atlasShader.setUniform('uRepeat', [1.0, 1.0]);
         atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
-        atlasShader.setUniform('uWrapMode', [1.0, 0.0]); 
         noStroke();           // Impedisce al bug delle linee di rompere il batch
         
         texture(atlasImage);

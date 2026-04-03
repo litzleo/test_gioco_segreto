@@ -326,6 +326,7 @@ function creaSpine(x, y, w, h, o = 'su'){
                 break;
             }
             numSpine = floor(textureW / textureH);
+            const atlasShader = atlasShaders[1][0];
             shader(atlasShader);
             atlasShader.setUniform('uTexture', atlasImage);
             atlasShader.setUniform('uColor', [1, 1, 1, 1]);
@@ -333,7 +334,6 @@ function creaSpine(x, y, w, h, o = 'su'){
             atlasShader.setUniform('uSubRect', uvSpina);
             atlasShader.setUniform('uRepeat', [numSpine, 1]);
             atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
-            atlasShader.setUniform('uWrapMode', [1.0, 0.0]); 
             rect(- textureW/2, - textureH/2, numSpine*textureH, textureH);
         pop();
         resetShader();
@@ -472,14 +472,7 @@ function provaGenerica1(){
     collisori.push({ x: 410, y: 1120, w: 50, h: 40, rompibile: false, mobile: false});
     collisori.push({ x: 460, y: 840, w: 40, h: 320, rompibile: false, mobile: false});
     collisori.push({ x: 260, y: 780, w: 40, h: 120, rompibile: false, mobile: false});
-    collisori.push({ x: 0, y: 0, rompibile: false, mobile: false,
-        vertici: [{x: 260, y: 780}, {x: 280, y: 780}, {x: 270, y: 760}],
-        tocco: morte
-    });
-    collisori.push({ x: 0, y: 0, rompibile: false, mobile: false,
-        vertici: [{x: 280, y: 780}, {x: 300, y: 780}, {x: 290, y: 760}],
-        tocco: morte
-    });
+    collisori.push(creaSpine(260, 760, 40, 20));
     collisori.push({ x: 1010, y: 640, w: 40, h: 570, rompibile: false, mobile: false});
     collisori.push({ x: 294, y: 640, w: 716, h: 40, rompibile: false, mobile: false});
     collisori.push({ x: 1120, y: 250, w: 40, h: 1140, rompibile: false, mobile: false});
@@ -1333,6 +1326,7 @@ function creaCheckpoint(causatore, x, y, f){
         // Calcolo dell'offset (0 = spento, 1-2 = animazione attivo)
         const offset = checkpointAttivo === causatore ? (floor(tempo / 8) % 2 + 1) : 0;
         
+        const atlasShader = atlasShaders[0][0];
         shader(atlasShader);
         texture(atlasImage);
         // Parametri Atlas (Assumendo larghezza 240px e altezza 132px)
@@ -1350,7 +1344,6 @@ function creaCheckpoint(causatore, x, y, f){
         atlasShader.setUniform('uColor', [1, 1, 1, 1]); 
         atlasShader.setUniform('uIsSprite', 1); 
         atlasShader.setUniform('uTexSize', [ATLAS_W, ATLAS_H]); 
-        atlasShader.setUniform('uWrapMode', [0.0, 0.0]); 
     
         const posX = x + (LARGHEZZA - CHECKPOINT_W) / 2;
         const posY = y + ALTEZZA - CHECKPOINT_H;
