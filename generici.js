@@ -635,11 +635,14 @@ function provaGenerica1(){
         percorso: [{x: 4840, y: 1450, t:7}, {x: 4840, y: 1850, t:1}, {x: 4840, y: 1850, t:7}, {x: 4840, y: 1450}],
         tocco: () => ascensoreRallentaScatto.mobile = true
     };
-    const ostacoloRallentaScatto = {x: 4840, y: 2100, w: 160, h: 40, rompibile: false, mobile: false};
-    const ostacoloRallentaScatto2 = {x: 4460, y: 2300, w: 160, h: 40, rompibile: false, mobile: false};
+    velocini.stato.add("PW_scatto");
+    const ostacoloRallentaScatto = {x: 4620, y: 2200, w: 380, h: 40, rompibile: false, mobile: false};
+    const ostacoloRallentaScatto2 = {x: 4460, y: 2300, w: 460, h: 40, rompibile: false, mobile: false};
+    const ostacoloRallentaScatto3 = {x: 4675, y: 2400, w: 325, h: 40, rompibile: false, mobile: false};
     collisori.push(ascensoreRallentaScatto);
     collisori.push(ostacoloRallentaScatto);
     collisori.push(ostacoloRallentaScatto2);
+    collisori.push(ostacoloRallentaScatto3);
     collisori.push({x: 4420, y: 1380, w: 40, h: 1300, rompibile: false, mobile: false});
     collisori.push({x: 4460, y: 1450, w: 380, h: 40, rompibile: false, mobile: false});
     causatori.push(creaCheckpoint({x: 4460, y: 1350, w: 100, h: 100}, 4510 - LARGHEZZA/2, 1450 - ALTEZZA));
@@ -689,6 +692,10 @@ function provaGenerica1(){
         if(collisori.includes(ostacoloRallentaScatto2)){
             collisori.splice(collisori.indexOf(ostacoloRallentaScatto2), 1);
             togliCollisoreAQuadranti(ostacoloRallentaScatto2);
+        }
+        if(collisori.includes(ostacoloRallentaScatto3)){
+            collisori.splice(collisori.indexOf(ostacoloRallentaScatto3), 1);
+            togliCollisoreAQuadranti(ostacoloRallentaScatto3);
         }
     });
     collisori.push({x: 4700, y: 2960, w: 300, h: 40, rompibile: false, mobile: false});
@@ -1278,7 +1285,7 @@ function provaGenerica1(){
     causatori.push(creaCheckpoint({x: 2100, y: 330, w: 60, h: 50}, 2130 - LARGHEZZA/2, 380 - ALTEZZA));
 
 
-    velocini.x = 300, velocini.y=1500;
+    velocini.x = 4600, velocini.y=2000;//velocini.x = 300, velocini.y=1500;
     
 
     camera.x = velocini.x + velocini.w/2;
