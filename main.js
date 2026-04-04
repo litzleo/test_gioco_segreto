@@ -10,6 +10,11 @@ let atlasImage;
 
 let atlasShaders = [];
 
+let passoNormale;
+let passoMetallo;
+
+let materialePestato = 'terra';
+
 const originalFill = p5.prototype.fill;
 p5.prototype.fill = function(...args) {
     trackerFill = args; // Salviamo i valori
@@ -42,6 +47,9 @@ function preload() {
     });
   atlasShaders.push([loadShader('atlas.vert', 'clamp_clamp.frag'), loadShader('atlas.vert', 'clamp_wrap.frag')]);
   atlasShaders.push([loadShader('atlas.vert', 'wrap_clamp.frag'), loadShader('atlas.vert', 'wrap_wrap.frag')]);
+
+  passoNormale = loadSound('suoni/passo_normale.mp3');
+  passoMetallo = loadSound('suoni/passo_metallo.mp3');
 }
 function setup() {
     const W = 1350, H = 585;
@@ -219,6 +227,10 @@ function disegnaPersonaggio(x, y, w, h) {
     // Aggiornamento animazione (spostato fuori per pulizia)
     if ((velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco")) && tempo % (4 * floor(velRatio)) === 0) {
         contPersonaggio++;
+        if(col === 3 || col === 8){
+            const passo = random([0, 1, 2, 3, 4]);
+            materialePestato === 'terra' ? passoNormale.play(0, 1, 1, passo * 0.2, 0.19) : passoMetallo.play(0, 1, 1, passo * 0.2, 0.1);
+        }
     }
 }
 

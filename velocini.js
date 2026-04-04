@@ -108,6 +108,8 @@ function collisioni(deltaTime) {
 
     const collisoriToccati = new Set();
 
+    materialePestato = 'terra';
+
     for(let x = fullN.x - LARGHEZZA; x <= fullN.x + LARGHEZZA; x += LARGHEZZA/2){
         for(let y = velocini.y + velocini.h/2 - ALTEZZA; y <= velocini.y + velocini.h/2 + ALTEZZA; y += ALTEZZA/2){
             let index = getCollIndice({x: x, y: y});
@@ -193,6 +195,9 @@ function collisioni(deltaTime) {
                                     velocini.pavimentoVx = collisore.vx;
                                 if('vy' in collisore)
                                     velocini.pavimentoVy = collisore.vy;
+                                if(collisore.percorso){
+                                    materialePestato = 'metallo';
+                                }
                             }
 
                             confini = {minX:Number.MIN_SAFE_INTEGER, 
