@@ -635,7 +635,6 @@ function provaGenerica1(){
         percorso: [{x: 4840, y: 1450, t:7}, {x: 4840, y: 1850, t:1}, {x: 4840, y: 1850, t:7}, {x: 4840, y: 1450}],
         tocco: () => ascensoreRallentaScatto.mobile = true
     };
-    velocini.stato.add("PW_scatto");
     const ostacoloRallentaScatto = {x: 4620, y: 2200, w: 380, h: 40, rompibile: false, mobile: false};
     const ostacoloRallentaScatto2 = {x: 4460, y: 2300, w: 460, h: 40, rompibile: false, mobile: false};
     const ostacoloRallentaScatto3 = {x: 4675, y: 2400, w: 325, h: 40, rompibile: false, mobile: false};
@@ -1285,7 +1284,7 @@ function provaGenerica1(){
     causatori.push(creaCheckpoint({x: 2100, y: 330, w: 60, h: 50}, 2130 - LARGHEZZA/2, 380 - ALTEZZA));
 
 
-    velocini.x = 4600, velocini.y=2000;//velocini.x = 300, velocini.y=1500;
+    velocini.x = 300, velocini.y=1500;
     
 
     camera.x = velocini.x + velocini.w/2;
