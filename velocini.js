@@ -315,9 +315,12 @@ function collisioni(deltaTime) {
     }
     
     if(collisionePiedeCX || (collisionePiedeSX && collisionePiedeDX) || collisioneGIU){
+        const impatto = velocini.vy / MAX_CADUTA * 3;
         velocini.vy = min(velocini.vy, 0);
 
         if(velocini.frameSalto <= 0){
+            if(!velocini.stato.has("atterrato"))
+                suonaPasso(impatto);
             velocini.stato.delete("srotolato");
             velocini.stato.add("atterrato");
         }

@@ -228,10 +228,14 @@ function disegnaPersonaggio(x, y, w, h) {
     if ((velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco")) && tempo % (4 * floor(velRatio)) === 0) {
         contPersonaggio++;
         if(col === 3 || col === 8){
-            const passo = random([0, 1, 2, 3, 4]);
-            materialePestato === 'terra' ? passoNormale.play(0, 1, 1, passo * 0.2, 0.19) : passoMetallo.play(0, 1, 1, passo * 0.2, 0.1);
+            suonaPasso();
         }
     }
+}
+
+function suonaPasso(volume = 0.5){
+    const passo = random([0, 1, 2, 3, 4]);
+    materialePestato === 'terra' ? passoNormale.play(0, 1, volume, passo * 0.2, 0.19) : passoMetallo.play(0, 1, 1, passo * 0.2, 0.19);
 }
 
 let menuIndex = 0;
