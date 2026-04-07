@@ -1197,6 +1197,7 @@ function provaGenerica1(){
     blocchiBlu.push(blu4);
     collisori.push(blu4);
     collisori.push({x: 600, y: 2640, w: 40, h: 200, rompibile: false, mobile: false});
+    collisori.push(creaSpine(640, 2780, 20, 20));
     collisori.push({x: 640, y: 2800, w: 770, h: 40, rompibile: false, mobile: false});
     collisori.push({x: 640, y: 2800, w: 770, h: 40, rompibile: false, mobile: false});
     const rosso4 = {x: 640, y: 2640, w: 230, h: 40, rompibile: false, mobile: false, colore: color(255, 0, 0)};
