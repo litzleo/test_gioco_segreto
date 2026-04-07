@@ -12,6 +12,7 @@ let atlasShaders = [];
 
 let passoNormale;
 let passoMetallo;
+let suonoSalto;
 
 let materialePestato = 'terra';
 
@@ -40,16 +41,21 @@ p5.prototype.noStroke = function() {
 };
 
 function preload() {
-  mioFont = loadFont('font/arial.ttf'); 
-  atlasImage = loadImage('sprite/sprite_sheet.png', img => {
+    mioFont = loadFont('font/arial.ttf'); 
+    atlasImage = loadImage('sprite/sprite_sheet.png', img => {
         // Imposta i filtri della texture WebGL direttamente
         img.canvas.getContext('2d').imageSmoothingEnabled = false;
     });
-  atlasShaders.push([loadShader('atlas.vert', 'clamp_clamp.frag'), loadShader('atlas.vert', 'clamp_wrap.frag')]);
-  atlasShaders.push([loadShader('atlas.vert', 'wrap_clamp.frag'), loadShader('atlas.vert', 'wrap_wrap.frag')]);
+    atlasShaders.push([loadShader('atlas.vert', 'clamp_clamp.frag'), loadShader('atlas.vert', 'clamp_wrap.frag')]);
+    atlasShaders.push([loadShader('atlas.vert', 'wrap_clamp.frag'), loadShader('atlas.vert', 'wrap_wrap.frag')]);
 
-  passoNormale = loadSound('suoni/passo_normale.mp3');
-  passoMetallo = loadSound('suoni/passo_metallo.mp3');
+    passoNormale = loadSound('suoni/passo_normale.mp3');
+    passoMetallo = loadSound('suoni/passo_metallo.mp3');
+    suonoSalto = loadSound('suoni/salto.mp3');
+
+    passoNormale.playMode('untilDone');
+    passoMetallo.playMode('untilDone');
+    suonoSalto.playMode('untilDone');
 }
 function setup() {
     const W = 1350, H = 585;
@@ -88,7 +94,6 @@ let schermata = 'menù';
 let tempo = 0;
 let lagFrames = 0;
 function disegnaGioco(){
-
     if(comandi.RESET.stato === ATTIVATO){
         transizionaSchermata("gioco");
     }
@@ -234,8 +239,16 @@ function disegnaPersonaggio(x, y, w, h) {
 }
 
 function suonaPasso(volume = 0.5){
-    const passo = random([0, 1, 2, 3, 4]);
-    materialePestato === 'terra' ? passoNormale.play(0, 1, volume, passo * 0.2, 0.19) : passoMetallo.play(0, 1, 1, passo * 0.2, 0.19);
+    materialePestato === 'terra' ? suonaRandom(passoNormale, 5, volume, 0.2) : suonaRandom(passoMetallo, 5, volume, 0.2);
+}
+
+function suonaRandom(suono, occorrenze, volume, durata) {
+    let indiceCasuale = floor(random(occorrenze));
+    let tempoInizio = indiceCasuale * durata;
+
+    if (!suono.isPlaying()) { 
+        suono.play(0, 1, volume, tempoInizio, durata - 0.05);
+    }
 }
 
 let menuIndex = 0;

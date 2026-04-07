@@ -507,6 +507,7 @@ function salto(){
         velocini.stato.delete("cadenteDaPoco");
         velocini.grav = GRAVITA_SALTO;
         velocini.tempoSalto = MAX_DURATA_SALTO;
+        suonaRandom(suonoSalto, 5, 0.5, 0.2);
     }
 }
 
