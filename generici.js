@@ -88,6 +88,12 @@ function setupComandi() {
     
 }
 
+function keyPressed() {
+    if (getAudioContext().state !== 'running') {
+        userStartAudio();
+    }
+}
+
 let spartito = [];
 
 function aggiornaComandi(frame, pilotato) {

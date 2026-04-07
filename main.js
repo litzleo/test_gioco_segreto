@@ -52,10 +52,6 @@ function preload() {
     passoNormale = loadSound('suoni/passo_normale.mp3');
     passoMetallo = loadSound('suoni/passo_metallo.mp3');
     suonoSalto = loadSound('suoni/salto.mp3');
-
-    passoNormale.playMode('untilDone');
-    passoMetallo.playMode('untilDone');
-    suonoSalto.playMode('untilDone');
 }
 function setup() {
     const W = 1350, H = 585;
@@ -246,8 +242,11 @@ function suonaRandom(suono, occorrenze, volume, durata) {
     let indiceCasuale = floor(random(occorrenze));
     let tempoInizio = indiceCasuale * durata;
 
-    if (!suono.isPlaying()) { 
-        suono.play(0, 1, volume, tempoInizio, durata - 0.05);
+    if (!suono.isPlaying()) {
+        suono.stop();
+        suono.play(0, 1, volume);
+        suono.jump(tempoInizio);
+        setTimeout(() => suono.stop(), (durata - 0.05) * 1000);
     }
 }
 
