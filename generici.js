@@ -589,11 +589,13 @@ function provaGenerica1(){
         percorso: [{x: 4420, y: 370, t:2}, {x: 4540, y: 370, t:2}, {x: 4420, y: 370}]
     };
     const spineRetrattiliDash = creaSpine(4580, 438, 220, 22);
-    creaPulsante(4500, 450, 60, 11, () => {
+    creaPulsante(4500, 450, 62, 11, () => {
         if(!collisori.includes(spineRetrattiliDash)){
+            sveglie.push({t: 1, azione: () => {
+                collisori.push(spineRetrattiliDash);
+                aggiungiCollisoreAQuadranti(spineRetrattiliDash);
+            }});
             pistoneDash.mobile = true;
-            collisori.push(spineRetrattiliDash);
-            aggiungiCollisoreAQuadranti(spineRetrattiliDash);
             sveglie.push({t: FRAME_RATE * 1.9, azione: () => {
                 collisori.splice(collisori.indexOf(spineRetrattiliDash), 1);
                 togliCollisoreAQuadranti(spineRetrattiliDash);
