@@ -162,8 +162,7 @@ function disegnaGioco(){
     textBuffer.textSize(20);
     textBuffer.text(tempoDaMostrare(tempo), 60, 20);
 
-    if(tempo === 1000)
-        console.log(spartito);
+    
 }
 
 let contPersonaggio=0;
