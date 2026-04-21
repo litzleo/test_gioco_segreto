@@ -223,6 +223,12 @@ function togliCollisoreAQuadranti(collisore){
 
 function caricaPiattaforme(){
 
+    quadranti = {};
+
+    collisori = [];
+
+    causatori = [];
+
     provaGenerica1();
 
     collisori.forEach((item, index) => {

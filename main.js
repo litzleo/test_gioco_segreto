@@ -58,7 +58,6 @@ function setup() {
     createCanvas(W, H, WEBGL);
     frameRate(FRAME_RATE);
     setupComandi();
-    caricaPiattaforme();
     ellipseMode(CORNER);
     textFont(mioFont);
     
@@ -739,6 +738,12 @@ function transizionaSchermata(nuovoStato){
     switch(schermata){
         case 'gioco':
             //resetta il gioco
+            velocini = { x: -20, y: 430, w: LARGHEZZA, h: ALTEZZA, vx: 0, vy: 0, pavimentoVx: 0, pavimentoVy: 0,
+                grav: GRAVITA, accel: ACCELERAZIONE, tempoCoyote: COYOTE, attr: ATTRITO,
+                tempoSalto : MAX_DURATA_SALTO, frameSalto : 0, orientazione : "destra",
+                frameParete : 0, frameScatto : 0, frameCooldownRotolata : 0, rinascita : {x: 0, y: -100},
+                stato: new Set() };
+            caricaPiattaforme();
             tempo = 0;
             textBuffer.textAlign(LEFT, CENTER);
             textAlign(LEFT, CENTER);
