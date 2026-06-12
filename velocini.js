@@ -97,6 +97,7 @@ function collisioni(deltaTime) {
     let collisioneSoloDX = false;
     let collisioneLatoSX = false;
     let collisioneLatoDX = false;
+    let collisioneMuri = false;
 
     const collisoriCalcolati = new Set();
 
@@ -229,6 +230,8 @@ function collisioni(deltaTime) {
                             collisioneSoloSX |= collSoloSX;
                             collisioneSoloDX |= collSoloDX;
 
+                            collisioneMuri = collMuroSX && collMuroDX;
+
                             let coll = collSoloSX || collSoloDX || collSALTO || collPiedeCX;
                             
                             if('tocco' in collisore){
@@ -311,6 +314,9 @@ function collisioni(deltaTime) {
             velocini.y += velocini.vy * deltaTime;
         }
     }
+
+    if(collisioneMuri)
+        morte();
 
     if (collisioneFullSALTO && (collisionePiedeCX || (collisionePiedeSX && collisionePiedeDX))){
         if(collisionePartialSALTO){
