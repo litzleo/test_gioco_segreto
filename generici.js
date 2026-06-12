@@ -411,7 +411,7 @@ function provaGenerica1(){
 
     collisori.push({ x: 0, y: 1600, w: 1000, h: 40, mobile: false});
     collisori.push({ x: 400, y: 1500, w: 80, h: 40, mobile: false, scomparibile: true, scomparso: true});
-    collisori.push({ x: 0, y: 0, vertici: [{x: 600, y: 1500}, {x: 600, y: 1580}, {x: 800, y: 1580}, {x: 700, y: 1500}], mobile: false, scomparibile: true, scomparso: true});
+    collisori.push({ x: 0, y: 0, vertici: [{x: 600, y: 1500}, {x: 600, y: 1580}, {x: 1000, y: 1580}, {x: 700, y: 1500}], mobile: false, scomparibile: true, scomparso: true});
     velocini.stato.add("PW_attivablocchi");
     velocini.stato.add("PW_saltomuro");
 

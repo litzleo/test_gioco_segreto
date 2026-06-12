@@ -353,6 +353,9 @@ function collisioni(deltaTime) {
     
 }
 
+let frameCamminata = 0;
+let prevVx = 0;
+
 function muoviVelocini(deltaTime) {
     
     collisioni(deltaTime);
@@ -376,18 +379,23 @@ function muoviVelocini(deltaTime) {
         else {
             velocini.grav = GRAVITA;
         }
-        if(velocini.stato.has("PW_saltomuro"))saltoAMuro();
+        if(velocini.stato.has("PW_saltomuro"))
+            saltoAMuro();
+
         if (comandi.SALTO.stato == DISATTIVATO && velocini.vy < 0){
             velocini.vy = max(velocini.vy, velocini.vy / 
                 map(velocini.vy, 0, -FORZA_SALTO, 1, 2));
         }
 
+        const correndo = frameCamminata >= TEMPO_CORSA;
+
         if(velocini.stato.has("noMovimentoLaterale")){
             velocini.y -= ALTEZZA / 3;
+            velocini.vx = 0;
         } else {
             if ((comandi.SX.stato & (ATTIVATO | ATTIVO)) && (comandi.DX.stato & (DISATTIVATO | INATTIVO))) {
                 let acc = modAria * velocini.accel * deltaTime
-                velocini.vx = max(velocini.vx - acc, -MAX_VELOCITA);
+                velocini.vx = max(velocini.vx - acc, -(correndo ? MAX_VELOCITA : MAX_VELOCITA_CAMMINATA));
                 if(velocini.vx > 0)
                     velocini.vx = max(velocini.vx - (velocini.stato.has("atterrato") ? MODIFICATORE_CAMBIO_DIREZIONE : MODIFICATORE_CAMBIO_DIREZIONE_IN_ARIA) * acc, -MAX_VELOCITA);
                 movLaterale = true;
@@ -395,9 +403,9 @@ function muoviVelocini(deltaTime) {
             }
             if ((comandi.DX.stato & (ATTIVATO | ATTIVO)) && (comandi.SX.stato & (DISATTIVATO | INATTIVO))) {
                 let acc = modAria * velocini.accel * deltaTime
-                velocini.vx = min(velocini.vx + acc, MAX_VELOCITA);
+                velocini.vx = min(velocini.vx + acc, correndo ? MAX_VELOCITA : MAX_VELOCITA_CAMMINATA);
                 if(velocini.vx < 0)
-                    velocini.vx = min(velocini.vx + (velocini.stato.has("atterrato") ? MODIFICATORE_CAMBIO_DIREZIONE : MODIFICATORE_CAMBIO_DIREZIONE_IN_ARIA) * acc, MAX_VELOCITA);
+                    velocini.vx = min(velocini.vx + (velocini.stato.has("atterrato") ? MODIFICATORE_CAMBIO_DIREZIONE : MODIFICATORE_CAMBIO_DIREZIONE_IN_ARIA) * (correndo ? MODIFICATORE_CAMBIO_DIREZIONE_CORSA : 1) * acc, MAX_VELOCITA);
                 movLaterale = true;
                 velocini.orientazione = "destra";
             }
@@ -412,7 +420,12 @@ function muoviVelocini(deltaTime) {
             }
         }
 
-        
+        if(velocini.vx === 0 || !(correndo || velocini.stato.has("atterrato")) || (correndo && prevVx * velocini.vx < 0) || velocini.stato.has("abbassato"))
+            frameCamminata = 0;
+        else
+            frameCamminata++;
+        prevVx = velocini.vx;
+
         if(velocini.stato.has("PW_scatto"))scatto();
         if(velocini.stato.has("PW_attivablocchi"))attivaBlocchi();
     }
