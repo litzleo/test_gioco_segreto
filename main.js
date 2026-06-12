@@ -143,10 +143,8 @@ function disegnaGioco(){
 
     if(velocini.stato.has("scatto"))fill(0, 255, 0);
     else if(velocini.stato.has("cooldown_scatto"))fill(255, 255, 0);
-    else if(velocini.stato.has("rotolata")) fill(0, 0, 255);
     else fill(255, 0, 0);
-    if(velocini.stato.has("rotolata")) circle(velocini.x, velocini.y, velocini.w);
-    else disegnaPersonaggio(velocini.x - 1, velocini.y - 6, 24, 48);
+    disegnaPersonaggio(velocini.x - 1, velocini.y - 6, 24, 48);
 
 
     pop();
@@ -955,6 +953,18 @@ function rimappaVertice(ox, oy, vx, vy, angolo){
     }
 }
 
+function dividiLunghezzaInTrattini(w, desiderato){
+    const primaApprox = w * 1.0 / desiderato;
+    let sottoDispari = floor(primaApprox);
+    if(sottoDispari % 2 === 0)
+        sottoDispari--;
+    let sopraDispari = ceil(primaApprox);
+    if(sopraDispari % 2 === 0)
+        sopraDispari++;
+
+    return primaApprox - sottoDispari < sopraDispari - primaApprox ? sottoDispari : sopraDispari;
+}
+
 function disegnaCollisori(){
 
     const mousePos = [mouseX + camera.x - width/2, mouseY + camera.y - height/2];
@@ -962,11 +972,20 @@ function disegnaCollisori(){
 
     const disegna = (collisore) => {
         let texturabile = false;
+        let bordo = null;
         if(collisore.rompibile)fill(255, 200, 120);
+        else if(collisore.scomparibile){
+            if(collisore.scomparso){
+                bordo = color(50, 200, 255);
+            } else {
+                fill(20, 170, 220);
+            }
+        }
         else if(collisore.colore)
             fill(collisore.colore);
         else
             texturabile = true;
+        
         if(haColliso(mousePos[0], mousePos[1], collisore)){
             if(clicked)
                 navigator.clipboard.writeText('x: ' + collisore.x + ', y: ' + collisore.y);
@@ -989,15 +1008,76 @@ function disegnaCollisori(){
         }
         else if(texturabile)
             disegnaTexture(collisore);
-        else if('h' in collisore)
-            rect(collisore.x, collisore.y, collisore.w, collisore.h);
+        else if('h' in collisore){
+            if(bordo !== null){
+                fill(bordo);
+                const numTrattiniW = dividiLunghezzaInTrattini(collisore.w, LUNGHEZZA_TRATTINO);
+                const wTrattino = collisore.w / numTrattiniW;
+                for(let i=0; i<numTrattiniW; i+=2){
+                    rect(collisore.x + i*wTrattino, collisore.y, wTrattino, SPESSORE_TRATTEGGIO);
+                    rect(collisore.x + i*wTrattino, collisore.y + collisore.h - SPESSORE_TRATTEGGIO, wTrattino, SPESSORE_TRATTEGGIO);
+                }
+                const numTrattiniH = dividiLunghezzaInTrattini(collisore.h, LUNGHEZZA_TRATTINO);
+                const hTrattino = collisore.h / numTrattiniH;
+                for(let i=0; i<numTrattiniH; i+=2){
+                    rect(collisore.x, collisore.y + i*hTrattino, SPESSORE_TRATTEGGIO, hTrattino);
+                    rect(collisore.x + collisore.w - SPESSORE_TRATTEGGIO, collisore.y + i*hTrattino, SPESSORE_TRATTEGGIO, hTrattino);
+                }
+            } else {
+                rect(collisore.x, collisore.y, collisore.w, collisore.h);
+            }
+        }
         else {
-            beginShape();
-            collisore.vertici.forEach(vertice => {
-                vertex(vertice.x + collisore.x, vertice.y + collisore.y);
-                    //(vertice.x + collisore.x) / terrenoProfondo.width, (vertice.y + collisore.y) / terrenoProfondo.height);
-            })
-            endShape();
+            if(bordo !== null){
+                fill(bordo);
+                collisore.vertici.forEach((A, index) => {
+                    const B = collisore.vertici[(index + 1) % collisore.vertici.length];
+                    const C = collisore.vertici[(index + 2) % collisore.vertici.length];
+                    const Z = collisore.vertici[(index + collisore.vertici.length - 1) % collisore.vertici.length];
+                    push();
+                        const angolo = atan2(B.y - A.y, B.x - A.x);
+                        const dist = sqrt(sq(B.x - A.x) + sq(B.y - A.y));
+                        translate(A.x, A.y);
+                        rotate(angolo);
+                        const numTrattiniW = dividiLunghezzaInTrattini(dist, LUNGHEZZA_TRATTINO);
+                        const wTrattino = dist / numTrattiniW;
+                        for(let i=2; i<numTrattiniW-2; i+=2){
+                            rect(i*wTrattino, -SPESSORE_TRATTEGGIO, wTrattino, SPESSORE_TRATTEGGIO);
+                        }
+                        //trapezio fine
+                        const dBAx = A.x - B.x;
+                        const dBAy = A.y - B.y;
+                        const dBCx = C.x - B.x;
+                        const dBCy = C.y - B.y;
+                        const offsetFine = (dBAx * dBCx + dBAy * dBCy) / (dBAx * dBCy - dBAy * dBCx) * SPESSORE_TRATTEGGIO;
+                        beginShape();
+                            vertex(dist, 0);
+                            vertex(dist- wTrattino, 0);
+                            vertex(dist- wTrattino, -SPESSORE_TRATTEGGIO);
+                            vertex(dist- offsetFine, -SPESSORE_TRATTEGGIO);
+                        endShape();
+                        //trapezio inizio
+                        const dAZx = B.x - A.x;
+                        const dAZy = B.y - A.y;
+                        const dABx = Z.x - A.x;
+                        const dABy = Z.y - A.y;
+                        const offsetInizio = (dABx * dAZx + dABy * dAZy) / (dABx * dAZy - dABy * dAZx) * SPESSORE_TRATTEGGIO;
+                        beginShape();
+                            vertex(0, 0);
+                            vertex(offsetInizio, -SPESSORE_TRATTEGGIO);
+                            vertex(wTrattino, -SPESSORE_TRATTEGGIO);
+                            vertex(wTrattino, 0);
+                        endShape();
+                    pop();
+
+                })
+            } else {
+                beginShape();
+                collisore.vertici.forEach(vertice => {
+                    vertex(vertice.x + collisore.x, vertice.y + collisore.y);
+                })
+                endShape();
+            }
         }
     }
 
