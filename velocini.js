@@ -3,7 +3,7 @@
 let velocini = { x: -20, y: 430, w: LARGHEZZA, h: ALTEZZA, vx: 0, vy: 0, pavimentoVx: 0, pavimentoVy: 0,
      grav: GRAVITA, accel: ACCELERAZIONE, tempoCoyote: COYOTE, attr: ATTRITO,
      tempoSalto : MAX_DURATA_SALTO, frameSalto : 0, orientazione : "destra",
-     frameParete : 0, frameScatto : 0, frameCooldownRotolata : 0, rinascita : {x: 0, y: -100},
+     frameParete : 0, frameScatto : 0, rinascita : {x: 0, y: -100},
      stato: new Set() };
 
 let yAbbassata = ALTEZZA * (1 - ABBASSAMENTO);
@@ -97,8 +97,6 @@ function collisioni(deltaTime) {
     let collisioneSoloDX = false;
     let collisioneLatoSX = false;
     let collisioneLatoDX = false;
-    let collisioneRotSX = false;
-    let collisioneRotDX = false;
 
     const collisoriCalcolati = new Set();
 
@@ -223,12 +221,10 @@ function collisioni(deltaTime) {
                             collisionePiedeCX |= collPiedeCX;
                             collisionePiedeDX |= collPiedeDX;
 
-                            let collRotSX = haColliso(MuroCW.x, MuroCW.y, collisore, confini);
-                            let collRotDX = haColliso(MuroCE.x, MuroCE.y, collisore, confini);
-                            collisioneRotSX |= collRotSX;
-                            collisioneRotDX |= collRotDX;
-                            let collSoloSX = haColliso(MuroNW.x, MuroNW.y, collisore, confini) || collRotSX;
-                            let collSoloDX = haColliso(MuroNE.x, MuroNE.y, collisore, confini) || collRotDX;
+                            let collMuroSX = haColliso(MuroCW.x, MuroCW.y, collisore, confini);
+                            let collMuroDX = haColliso(MuroCE.x, MuroCE.y, collisore, confini);
+                            let collSoloSX = haColliso(MuroNW.x, MuroNW.y, collisore, confini) || collMuroSX;
+                            let collSoloDX = haColliso(MuroNE.x, MuroNE.y, collisore, confini) || collMuroDX;
 
                             collisioneSoloSX |= collSoloSX;
                             collisioneSoloDX |= collSoloDX;
@@ -412,7 +408,7 @@ function muoviVelocini(deltaTime) {
 
         
         if(velocini.stato.has("PW_scatto"))scatto();
-        if(velocini.stato.has("PW_attivaBlocchi"))attivaBlocchi();
+        if(velocini.stato.has("PW_attivablocchi"))attivaBlocchi();
     }
     
     abbassamento();
@@ -532,5 +528,4 @@ function resettaVelocini(){
     velocini.frameSalto = 0;
     velocini.frameParete = 0;
     velocini.frameScatto = 0;
-    velocini.frameCooldownRotolata = 0;
 }
