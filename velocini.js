@@ -355,6 +355,7 @@ function collisioni(deltaTime) {
 
 let frameCamminata = 0;
 let prevVx = 0;
+let prevAtterrato = false;
 
 function muoviVelocini(deltaTime) {
     
@@ -420,11 +421,12 @@ function muoviVelocini(deltaTime) {
             }
         }
 
-        if(velocini.vx === 0 || !(correndo || velocini.stato.has("atterrato")) || (correndo && prevVx * velocini.vx < 0) || velocini.stato.has("abbassato"))
+        if(velocini.vx === 0 || !(correndo || (prevAtterrato || velocini.stato.has("atterrato"))) || (correndo && prevVx * velocini.vx < 0) || velocini.stato.has("abbassato"))
             frameCamminata = 0;
         else
             frameCamminata++;
         prevVx = velocini.vx;
+        prevAtterrato = velocini.stato.has("atterrato");
 
         if(velocini.stato.has("PW_scatto"))scatto();
         if(velocini.stato.has("PW_attivablocchi"))attivaBlocchi();
@@ -509,7 +511,7 @@ function saltoAMuro(){
             salto();
             velocini.tempoSalto = 0;
             velocini.frameSalto = 1;
-            velocini.vx = FORZA_SALTO * (velocini.stato.has("pareteDX") ? -1 : 1);
+            velocini.vx = FORZA_SALTO * (velocini.stato.has("pareteDX") ? -SBALZO_SALTO_MURO : SBALZO_SALTO_MURO);
             velocini.orientazione = velocini.stato.has("pareteDX") ? "sinistra" : "destra";
             velocini.stato.delete("pareteDX");
             velocini.stato.delete("pareteSX");
