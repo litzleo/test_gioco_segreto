@@ -1052,9 +1052,13 @@ function disegnaCollisori(){
                         const offsetFine = (dBAx * dBCx + dBAy * dBCy) / (dBAx * dBCy - dBAy * dBCx) * SPESSORE_TRATTEGGIO;
                         beginShape();
                             vertex(dist, 0);
-                            vertex(dist- wTrattino, 0);
-                            vertex(dist- wTrattino, -SPESSORE_TRATTEGGIO);
-                            vertex(dist- offsetFine, -SPESSORE_TRATTEGGIO);
+                            vertex(dist - wTrattino, 0);
+                            if(offsetFine < wTrattino){
+                                vertex(dist - wTrattino, -SPESSORE_TRATTEGGIO);
+                                vertex(dist - max(0, offsetFine), -SPESSORE_TRATTEGGIO);
+                            } else {
+                                vertex(dist - wTrattino, -SPESSORE_TRATTEGGIO * wTrattino / offsetFine)
+                            }
                         endShape();
                         //trapezio inizio
                         const dAZx = B.x - A.x;
@@ -1064,8 +1068,12 @@ function disegnaCollisori(){
                         const offsetInizio = (dABx * dAZx + dABy * dAZy) / (dABx * dAZy - dABy * dAZx) * SPESSORE_TRATTEGGIO;
                         beginShape();
                             vertex(0, 0);
-                            vertex(offsetInizio, -SPESSORE_TRATTEGGIO);
-                            vertex(wTrattino, -SPESSORE_TRATTEGGIO);
+                            if(offsetInizio < wTrattino){
+                                vertex(max(0, offsetInizio), -SPESSORE_TRATTEGGIO);
+                                vertex(wTrattino, -SPESSORE_TRATTEGGIO);
+                            } else {
+                                vertex(wTrattino, -SPESSORE_TRATTEGGIO * wTrattino / offsetInizio)
+                            }
                             vertex(wTrattino, 0);
                         endShape();
                     pop();
