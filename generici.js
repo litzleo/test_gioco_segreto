@@ -409,9 +409,16 @@ function provaGenerica1(){
     camera.x = velocini.x + velocini.w/2;
     camera.y = velocini.y + velocini.h/2;
 
-    collisori.push({ x: 0, y: 1600, w: 1000, h: 40, mobile: false});
-    collisori.push({ x: 400, y: 1500, w: 80, h: 40, mobile: false, scomparibile: true, scomparso: true});
-    collisori.push({ x: 0, y: 0, vertici: [{x: 600, y: 1500}, {x: 600, y: 1580}, {x: 1000, y: 1580}, {x: 700, y: 1500}], mobile: false, scomparibile: true, scomparso: true});
+    collisori.push({ x: 0, y: 1600, w: 1600, h: 40, mobile: false});
+    collisori.push({ x: 400, y: 1490, w: 60, h: 40, mobile: false, scomparibile: true, scomparso: true});
+    collisori.push({ x: 0, y: 0, vertici: [{x: 800, y: 1450}, {x: 800, y: 1600}, {x: 1200, y: 1600}, {x: 900, y: 1450}]});
+    collisori.push({ x: 180, y: 1380, w: 60, h: 40});
+    collisori.push({ x: 430, y: 1275, w: 60, h: 40});
+    collisori.push({ x: 750, y: 1320, w: 60, h: 40, scomparibile: true, scomparso: false});
+    collisori.push({ x: 1100, y: 1320, w: 60, h: 40, scomparibile: true, scomparso: true});
+    collisori.push({ x: 2000, y: 1600, w: 60, h: 40});
+    collisori.push({ x: 2260, y: 1500, w: 60, h: 40});
+    collisori.push({ x: 2800, y: 1600, w: 60, h: 40});
     velocini.stato.add("PW_attivablocchi");
     velocini.stato.add("PW_saltomuro");
 

@@ -173,7 +173,10 @@ function collisioni(deltaTime) {
 
                             let collGIU = (haColliso(SE.x, SE.y, collisore, confini) ||
                                 haColliso(SC.x, SC.y, collisore, confini) ||
-                                haColliso(SW.x, SW.y, collisore, confini)) &&
+                                haColliso(SW.x, SW.y, collisore, confini) ||
+                                haColliso(SE.x, SE.y - MARGINE_COLLISIONE_GIU, collisore, confini) ||
+                                haColliso(SC.x, SC.y - MARGINE_COLLISIONE_GIU, collisore, confini) ||
+                                haColliso(SW.x, SW.y - MARGINE_COLLISIONE_GIU, collisore, confini)) &&
                                 !(collSX ^ collDX);
                             if (collGIU) {
                                 margineGIU = min(confini.minY, margineGIU);
@@ -357,6 +360,8 @@ let frameCamminata = 0;
 let prevVx = 0;
 let prevAtterrato = false;
 
+let prevTempoCamminata = 0;
+
 function muoviVelocini(deltaTime) {
     
     collisioni(deltaTime);
@@ -369,11 +374,11 @@ function muoviVelocini(deltaTime) {
     if(!velocini.stato.has("scatto")){
         
 
-        if (controllaBuffer("SALTO", ATTIVATO | ATTIVO)) {
-            if (controllaBuffer("SALTO", ATTIVATO) && (velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco"))) {
+        if(controllaBuffer("SALTO", ATTIVATO | ATTIVO)) {
+            if(controllaBuffer("SALTO", ATTIVATO) && (velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco"))) {
                 salto();
             }
-            else if (velocini.vy >= 0 || velocini.tempoSalto <= 0) {
+            else if(velocini.vy >= 0 || velocini.tempoSalto <= 0) {
                 velocini.grav = GRAVITA;
             }
         }
@@ -383,7 +388,7 @@ function muoviVelocini(deltaTime) {
         if(velocini.stato.has("PW_saltomuro"))
             saltoAMuro();
 
-        if (comandi.SALTO.stato == DISATTIVATO && velocini.vy < 0){
+        if(comandi.SALTO.stato == DISATTIVATO && velocini.vy < 0){
             velocini.vy = max(velocini.vy, velocini.vy / 
                 map(velocini.vy, 0, -FORZA_SALTO, 1, 2));
         }
@@ -394,24 +399,26 @@ function muoviVelocini(deltaTime) {
             velocini.y -= ALTEZZA / 3;
             velocini.vx = 0;
         } else {
-            if ((comandi.SX.stato & (ATTIVATO | ATTIVO)) && (comandi.DX.stato & (DISATTIVATO | INATTIVO))) {
+            if((comandi.SX.stato & (ATTIVATO | ATTIVO)) && (comandi.DX.stato & (DISATTIVATO | INATTIVO))) {
                 let acc = modAria * velocini.accel * deltaTime
-                velocini.vx = max(velocini.vx - acc, -(correndo ? MAX_VELOCITA : MAX_VELOCITA_CAMMINATA));
-                if(velocini.vx > 0)
+                velocini.vx = max(velocini.vx - acc, - MAX_VELOCITA);
+                if(velocini.vx >= 0)
                     velocini.vx = max(velocini.vx - (velocini.stato.has("atterrato") ? MODIFICATORE_CAMBIO_DIREZIONE : MODIFICATORE_CAMBIO_DIREZIONE_IN_ARIA) * acc, -MAX_VELOCITA);
                 movLaterale = true;
                 velocini.orientazione = "sinistra";
             }
-            if ((comandi.DX.stato & (ATTIVATO | ATTIVO)) && (comandi.SX.stato & (DISATTIVATO | INATTIVO))) {
+            if((comandi.DX.stato & (ATTIVATO | ATTIVO)) && (comandi.SX.stato & (DISATTIVATO | INATTIVO))) {
                 let acc = modAria * velocini.accel * deltaTime
-                velocini.vx = min(velocini.vx + acc, correndo ? MAX_VELOCITA : MAX_VELOCITA_CAMMINATA);
-                if(velocini.vx < 0)
-                    velocini.vx = min(velocini.vx + (velocini.stato.has("atterrato") ? MODIFICATORE_CAMBIO_DIREZIONE : MODIFICATORE_CAMBIO_DIREZIONE_IN_ARIA) * (correndo ? MODIFICATORE_CAMBIO_DIREZIONE_CORSA : 1) * acc, MAX_VELOCITA);
+                velocini.vx = min(velocini.vx + acc, MAX_VELOCITA);
+                if(velocini.vx <= 0)
+                    velocini.vx = min(velocini.vx + (velocini.stato.has("atterrato") ? MODIFICATORE_CAMBIO_DIREZIONE : MODIFICATORE_CAMBIO_DIREZIONE_IN_ARIA) * acc, MAX_VELOCITA);
                 movLaterale = true;
                 velocini.orientazione = "destra";
             }
+                if(velocini.vx === 0)prevTempoCamminata = tempo
+                if(velocini.vx === MAX_VELOCITA)console.log("max: " + (tempo - prevTempoCamminata));
             //attrito
-            if (velocini.stato.has("atterrato") && !movLaterale) {
+            if(velocini.stato.has("atterrato") && !movLaterale) {
                 let segno = velocini.vx > velocini.pavimentoVx ? -1 : 1;
                 velocini.vx += segno * min(deltaTime * velocini.attr, abs(velocini.pavimentoVx - velocini.vx));
             }
@@ -421,7 +428,7 @@ function muoviVelocini(deltaTime) {
             }
         }
 
-        if(velocini.vx === 0 || !(correndo || (prevAtterrato || velocini.stato.has("atterrato"))) || (correndo && prevVx * velocini.vx < 0) || velocini.stato.has("abbassato"))
+        if((velocini.vx === 0 && prevVx === 0) || !(correndo || prevAtterrato || velocini.stato.has("atterrato")) || (correndo && prevVx * velocini.vx < 0) || velocini.stato.has("abbassato"))
             frameCamminata = 0;
         else
             frameCamminata++;

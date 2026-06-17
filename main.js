@@ -54,7 +54,7 @@ function preload() {
     suonoSalto = loadSound('suoni/salto.mp3');
 }
 function setup() {
-    const W = 1350, H = 585;
+    const W = 1850, H = 585;
     createCanvas(W, H, WEBGL);
     frameRate(FRAME_RATE);
     setupComandi();
@@ -213,6 +213,7 @@ function disegnaPersonaggio(x, y, w, h) {
     // Inclinazione dinamica basata sulla velocità
     const velRatio = MAX_VELOCITA / abs(velocini.pavimentoVx - velocini.vx);
     if ((velocini.stato.has("atterrato") || velocini.stato.has("cadenteDaPoco")) && velRatio < 1.5) {
+        atlasShader.setUniform('uColor', [1, 0, 1, 1]);
         shearX(-QUARTER_PI / 6 / velRatio);
     }
 
@@ -315,7 +316,7 @@ function disegnaMenu(){
             comandoSelezionato = listaComandi[menuIndex];
         }
         if(comandi.MENU.stato === DISATTIVATO){
-            transizionaSchermata('gioco');
+            transizionaSchermata('menù');
         }
     }
 
