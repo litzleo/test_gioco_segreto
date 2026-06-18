@@ -316,7 +316,7 @@ function disegnaMenu(){
             comandoSelezionato = listaComandi[menuIndex];
         }
         if(comandi.MENU.stato === DISATTIVATO){
-            transizionaSchermata('menù');
+            transizionaSchermata('gioco');
         }
     }
 
